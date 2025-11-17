@@ -6,6 +6,9 @@ import pyttsx3
 import sqlite3
 from datetime import datetime, timedelta
 import dateparser
+import pygame
+import tempfile
+from gtts import gTTS
 
 app = Flask(__name__)
 
