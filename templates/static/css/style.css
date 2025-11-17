@@ -1,0 +1,335 @@
+/* static/css/style.css - DEEWANSHI CAR CENTER FINAL DESIGN (November 2025) */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+
+:root {
+    --bg-dark: #0a0a1a;
+    --primary: #00f2ff;
+    --secondary: #8e2de2;
+    --text: #e0e0e0;
+    --bubble-assistant: rgba(0, 242, 255, 0.15);
+    --bubble-user: rgba(142, 45, 226, 0.4);
+    --glow-primary: 0 0 30px rgba(0, 242, 255, 0.6);
+    --glow-secondary: 0 0 30px rgba(142, 45, 226, 0.6);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Roboto', sans-serif;
+    background: var(--bg-dark);
+    color: var(--text);
+    height: 100vh;
+    overflow: hidden;
+    position: relative;
+}
+
+#particle-canvas {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+
+/* Main Layout */
+.container {
+    position: relative;
+    z-index: 10;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    padding: 30px 20px;
+}
+
+/* Conversation Log */
+#conversation-log {
+    width: 92%;
+    max-width: 900px;
+    height: 62vh;
+    overflow-y: auto;
+    padding: 25px;
+    background: rgba(10, 10, 26, 0.75);
+    border-radius: 25px;
+    border: 1px solid rgba(0, 242, 255, 0.3);
+    box-shadow: var(--glow-primary), inset 0 0 20px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(10px);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.message {
+    padding: 14px 20px;
+    border-radius: 20px;
+    max-width: 78%;
+    line-height: 1.6;
+    font-size: 1.1em;
+    word-wrap: break-word;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    animation: fadeIn 0.4s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.assistant-message {
+    background: var(--bubble-assistant);
+    border: 1px solid var(--primary);
+    color: #c0f8ff;
+    align-self: flex-start;
+    border-bottom-left-radius: 4px;
+    backdrop-filter: blur(5px);
+}
+
+.user-message {
+    background: var(--bubble-user);
+    border: 1px solid var(--secondary);
+    color: white;
+    align-self: flex-end;
+    border-bottom-right-radius: 4px;
+    font-weight: 500;
+}
+
+/* Mic Orb */
+#orb {
+    width: 130px;
+    height: 130px;
+    background: radial-gradient(circle at 30% 30%, #00f2ff, #8e2de2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 0 50px rgba(0, 242, 255, 0.9), 0 0 80px rgba(142, 45, 226, 0.6);
+    transition: all 0.3s ease;
+    margin: 10px 0;
+}
+
+#orb i {
+    font-size: 56px;
+    color: white;
+    text-shadow: 0 0 20px black;
+}
+
+#orb:hover:not(.disabled) {
+    transform: scale(1.12);
+}
+
+#orb.disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    pointer-events: none;
+    filter: grayscale(70%);
+}
+
+#orb.listening {
+    animation: pulse 1.6s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 50px #00f2ff, 0 0 90px #8e2de2;
+    }
+    50% {
+        transform: scale(1.18);
+        box-shadow: 0 0 80px #00f2ff, 0 0 140px #8e2de2, 0 0 180px rgba(142,45,226,0.8);
+    }
+}
+
+/* Status Text */
+#status-text {
+    font-size: 1.5em;
+    font-weight: 400;
+    color: var(--primary);
+    text-shadow: 0 0 15px var(--primary);
+    margin-top: 15px;
+    min-height: 50px;
+    text-align: center;
+}
+
+/* Hidden Admin Button (controlled by JS) */
+#admin-btn {
+    position: fixed;
+    bottom: 25px;
+    right: 25px;
+    z-index: 9999;
+    padding: 16px 28px;
+    background: linear-gradient(45deg, #8e2de2, #4a00e0);
+    color: white;
+    border: 3px solid #8e2de2;
+    border-radius: 50px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    box-shadow: 0 0 40px rgba(142, 45, 226, 0.8);
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    backdrop-filter: blur(10px);
+}
+
+#admin-btn.visible {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+}
+
+#admin-btn:hover {
+    transform: scale(1.08) !important;
+    box-shadow: 0 0 60px rgba(142, 45, 226, 1);
+}
+
+/* Scrollbar Styling */
+#conversation-log::-webkit-scrollbar {
+    width: 8px;
+}
+#conversation-log::-webkit-scrollbar-track {
+    background: transparent;
+}
+#conversation-log::-webkit-scrollbar-thumb {
+    background: rgba(0, 242, 255, 0.5);
+    border-radius: 10px;
+}
+#conversation-log::-webkit-scrollbar-thumb:hover {
+    background: var(--primary);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    #conversation-log { height: 55vh; padding: 15px; }
+    #orb { width: 110px; height: 110px; }
+    #orb i { font-size: 46px; }
+    #status-text { font-size: 1.3em; }
+    .message { font-size: 1em; max-width: 85%; }
+}
+/* ==================== ADMIN DATABASE MODAL - MINIMAL ADDITION ==================== */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 10000;
+    left: 0; top: 0;
+    width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.92);
+    backdrop-filter: blur(12px);
+    align-items: center;
+    justify-content: center;
+}
+
+.modal.active {
+    display: flex;
+}
+
+.modal-content {
+    background: rgba(15, 15, 35, 0.95);
+    padding: 32px;
+    border-radius: 24px;
+    border: 2px solid var(--primary);
+    box-shadow: var(--glow-primary), 0 0 60px rgba(0, 242, 255, 0.3);
+    text-align: center;
+    max-width: 90%;
+    position: relative;
+}
+
+.modal-content.wide {
+    max-width: 960px;
+    width: 94%;
+}
+
+.modal-content h2 {
+    font-size: 2em;
+    background: linear-gradient(90deg, var(--primary), var(--secondary));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 20px;
+}
+
+#admin-password {
+    width: 100%;
+    padding: 16px;
+    background: rgba(0, 242, 255, 0.1);
+    border: 1.5px solid var(--primary);
+    border-radius: 14px;
+    color: white;
+    font-size: 1.2em;
+    margin: 16px 0;
+    text-align: center;
+}
+
+.modal-buttons button,
+#speak-all-btn {
+    padding: 14px 32px;
+    margin: 12px;
+    background: linear-gradient(45deg, var(--primary), var(--secondary));
+    border: none;
+    border-radius: 50px;
+    color: white;
+    font-weight: bold;
+    font-size: 1.1em;
+    cursor: pointer;
+    box-shadow: var(--glow-primary);
+    transition: all 0.3s ease;
+}
+
+.modal-buttons button:hover,
+#speak-all-btn:hover {
+    transform: scale(1.08);
+    box-shadow: 0 0 50px rgba(0, 242, 255, 0.8);
+}
+
+#appointments-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 24px 0;
+    font-size: 1.1em;
+    color: var(--text);
+}
+
+#appointments-table th {
+    background: rgba(0, 242, 255, 0.2);
+    padding: 14px;
+    text-align: left;
+    border-bottom: 2px solid var(--primary);
+}
+
+#appointments-table td {
+    padding: 14px;
+    border-bottom: 1px solid rgba(0, 242, 255, 0.3);
+}
+
+#appointments-table tr:hover {
+    background: rgba(0, 242, 255, 0.08);
+}
+
+#close-db {
+    position: absolute;
+    top: 16px;
+    right: 20px;
+    font-size: 2.4em;
+    background: none;
+    border: none;
+    color: var(--primary);
+    cursor: pointer;
+    text-shadow: 0 0 20px var(--primary);
+}
+
+/* Responsive for modals */
+@media (max-width: 768px) {
+    .modal-content { padding: 24px; }
+    .modal-content h2 { font-size: 1.6em; }
+    #appointments-table { font-size: 0.95em; }
+    #appointments-table th, #appointments-table td { padding: 10px; }
+}
