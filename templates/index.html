@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deewanshi Car Center - Voice Assistant</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+   
+    <style>
+        :root {
+            --bg-color: #0a0a1a;
+            --primary-glow: #00f2ff;
+            --secondary-glow: #8e2de2;
+            --text-color: #e0e0e0;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Roboto', sans-serif;
+            overflow: hidden;
+            height: 100vh;
+        }
+        canvas { position: fixed; top: 0; left: 0; z-index: 1; }
+        .container {
+            position: relative;
+            z-index: 10;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        #conversation-log {
+            width: 90%;
+            max-width: 800px;
+            height: 65vh;
+            overflow-y: auto;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(10, 10, 26, 0.7);
+            border-radius: 20px;
+            border: 1px solid rgba(0, 242, 255, 0.3);
+            box-shadow: 0 0 30px rgba(0, 242, 255, 0.2);
+        }
+        .message {
+            margin: 12px 0;
+            padding: 12px 18px;
+            border-radius: 18px;
+            max-width: 80%;
+            line-height: 1.5;
+            word-wrap: break-word;
+        }
+        .assistant-message {
+            background: linear-gradient(135deg, rgba(0,242,255,0.2), rgba(142,45,226,0.2));
+            align-self: flex-start;
+            border: 1px solid var(--primary-glow);
+            color: #e0f8ff;
+            margin-right: auto;
+        }
+        .user-message {
+            background: rgba(142,45,226,0.4);
+            align-self: flex-end;
+            border: 1px solid var(--secondary-glow);
+            color: white;
+            margin-left: auto;
+        }
+        #orb {
+            width: 120px;
+            height: 120px;
+            background: radial-gradient(circle at 30% 30%, #00f2ff, #8e2de2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 0 40px rgba(0, 242, 255, 0.8);
+            transition: all 0.4s ease;
+            margin: 20px 0;
+        }
+        #orb i { font-size: 50px; color: white; }
+        #orb.disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
+        #orb.listening { animation: pulse 1.5s infinite; }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 40px #00f2ff; }
+            50% { transform: scale(1.2); box-shadow: 0 0 80px #00f2ff, 0 0 100px #8e2de2; }
+        }
+        #status-text {
+            font-size: 1.4em;
+            margin-top: 20px;
+            text-shadow: 0 0 10px #00f2ff;
+            min-height: 40px;
+        }
+
+        /* Hidden Admin Button */
+        #admin-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 9999;
+            padding: 14px 24px;
+            background: linear-gradient(45deg, #8e2de2, #4a00e0);
+            color: white;
+            border: 2px solid #8e2de2;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: bold;
+            box-shadow: 0 0 30px rgba(142,45,226,0.8);
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.5s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        #admin-btn.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* === NEW: Password & Database Modals (Only Added Part) === */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 10000;
+            left: 0; top: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.92);
+            backdrop-filter: blur(8px);
+            align-items: center;
+            justify-content: center;
+        }
+        .modal.active { display: flex; }
+        .modal-content {
+            background: rgba(20,20,40,0.95);
+            padding: 30px;
+            border-radius: 20px;
+            border: 2px solid #00f2ff;
+            box-shadow: 0 0 40px rgba(0,242,255,0.6);
+            text-align: center;
+            max-width: 90%;
+        }
+        .modal-content.wide { max-width: 950px; }
+        .modal-content h2 {
+            background: linear-gradient(90deg, #00f2ff, #8e2de2);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 20px;
+        }
+        #admin-password {
+            width: 100%;
+            padding: 14px;
+            background: rgba(0,242,255,0.1);
+            border: 1px solid #00f2ff;
+            border-radius: 12px;
+            color: white;
+            font-size: 1.1em;
+            margin: 15px 0;
+        }
+        .modal-buttons button, #speak-all-btn {
+            padding: 12px 28px;
+            margin: 10px;
+            background: linear-gradient(45deg, #00f2ff, #8e2de2);
+            border: none;
+            border-radius: 50px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        #appointments-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            color: #e0f8ff;
+        }
+        #appointments-table th {
+            background: rgba(0,242,255,0.2);
+            padding: 12px;
+        }
+        #appointments-table td {
+            padding: 12px;
+            border-bottom: 1px solid rgba(0,242,255,0.3);
+        }
+        #close-db {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 2em;
+            background: none;
+            border: none;
+            color: #00f2ff;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="particle-canvas"></canvas>
+    <div class="container">
+        <div id="conversation-log"></div>
+        <div id="orb" class="disabled">
+            <i class="fas fa-microphone"></i>
+        </div>
+        <p id="status-text">Assistant is starting...</p>
+    </div>
+
+    <!-- Hidden Admin Button -->
+    <button id="admin-btn">
+        <i class="fas fa-database"></i> DATABASE
+    </button>
+
+    <!-- Password Modal -->
+    <div id="password-modal" class="modal">
+        <div class="modal-content">
+            <h2>Admin Access</h2>
+            <p>Enter password to view database</p>
+            <input type="password" id="admin-password" placeholder="Password...">
+            <div class="modal-buttons">
+                <button id="submit-password">Submit</button>
+                <button id="cancel-password">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Database Modal -->
+    <div id="database-modal" class="modal">
+        <div class="modal-content wide">
+            <h2>All Appointments</h2>
+            <button id="close-db">×</button>
+            <div id="db-table-container">
+                <table id="appointments-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Vehicle No</th>
+                            <th>Date</th>
+                            <th>Time</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <button id="speak-all-btn">Speak All Entries</button>
+        </div>
+    </div>
+
+    <!-- Load JavaScript -->
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
