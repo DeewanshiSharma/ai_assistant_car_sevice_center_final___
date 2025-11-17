@@ -1,3 +1,6 @@
-Flask
-google-generativeai
-python-dotenv
+Flask==3.0.3
+openai-whisper==20240930
+gtts==2.5.3
+pygame==2.6.1
+python-dateparser==1.2.2
+gunicorn==22.0.0   ← THIS LINE WAS MISSING!
