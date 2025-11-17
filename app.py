@@ -35,22 +35,36 @@ def init_db():
 
 init_db()
 
-# ==================== TTS ====================
+# ==================== TTS - gTTS (Indian voice, no build errors) ====================
+import os
+import tempfile
+import pygame
+from gtts import gTTS
+
 def speak(text):
     print(f"Assistant: {text}")
     try:
-        engine = pyttsx3.init()
-        engine.setProperty('rate', 160)
-        voices = engine.getProperty('voices')
-        for v in voices:
-            if any(x in v.name.lower() for x in ['zira', 'female', 'india']):
-                engine.setProperty('voice', v.id)
-                break
-        engine.say(text)
-        engine.runAndWait()
-        engine.stop()
-    except:
-        pass
+        # Indian English voice
+        tts = gTTS(text=text, lang='en', tld='co.in', slow=False)
+        
+        # Save to temp file
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.mp3') as fp:
+            temp_path = fp.name
+            tts.save(temp_path)
+        
+        # Play sound
+        pygame.mixer.init()
+        pygame.mixer.music.load(temp_path)
+        pygame.mixer.music.play()
+        while pygame.mixer.music.get_busy():
+            pygame.time.wait(100)
+        
+        # Cleanup
+        pygame.mixer.quit()
+        os.unlink(temp_path)
+        
+    except Exception as e:
+        print(f"TTS failed: {e}")
 
 # ==================== VEHICLE NUMBER NORMALIZER ====================
 def normalize_vehicle_no(text):
